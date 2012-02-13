@@ -2,27 +2,64 @@ module Lambdo where
 import System.IO
 import System.Environment
 import System.Directory
+import Control.Monad.Instances
+import Text.Printf
 import Data.List
 import Data.Char
+import Data.Maybe
 import Data.Time
 import Data.Time.Calendar
 import Data.Time.Format
+ 
+-- Two helpers
+--io f = interact (unlines . f . lines)
+--showln  = (++ "\n") . show
 
 today :: IO Day
 today = getCurrentTime >>= return . utctDay
 
 main :: IO ()
-main = do
+main = command_loop
+
+test = do
     d <- today
-    let time1 = fromGregorian 2011 3 14
-    let time2 = fromGregorian 2011 3 15 
-    let time3 = fromGregorian 2011 3 17 
+    let time1 = fromGregorian 2012 3 14
+    let time2 = fromGregorian 2012 3 15 
+    let time3 = fromGregorian 2012 3 17 
     let a = ToDo "Finish this program" time1 Academic High InProgress
     let b = ToDo "Write a SOSC paper" time2 Academic High Open
     let c = ToDo "Study for PBPL exam" time3 Academic High Open
     let e = ToDo "Work out" time1 Personal High Open
     let f = ToDo "Shady Dealer Meeting" time1 RSO Medium Open
     let l = [a,b,c,e,f]
+    return l
+
+command_loop = do
+    putStrLn "l \t Show To Do Items"
+    putStrLn "a \t Add a To Do Item"
+    putStrLn "d \t Delete a To Do Item"
+    putStrLn "q \t Quit"
+    putStr "\n"
+    command <- getLine
+    if command == "l"
+        then do putStrLn "list"
+                command_loop
+        else if command == "a" 
+            then do putStrLn "add"
+                    command_loop
+        else if command == "d" 
+            then do putStrLn "delete"
+                    command_loop
+        else if command == "q" 
+            then do putStrLn "Bye!"
+        else do putStrLn "Sorry, that's not a valid command."
+                command_loop
+
+
+showList :: ToDoList -> IO ()
+showList l = do
+    d <- today
+    putStr "\n"
     print (reverse $ sortBy (sortToDo d) l)
 
 
@@ -86,8 +123,8 @@ removeToDo ts t = delete t ts
 
 sortToDo :: Day -> ToDo -> ToDo -> Ordering
 sortToDo d a b 
-    | (calculatePriority d a) < (calculatePriority d b) = LT
-    | (calculatePriority d a) > (calculatePriority d b) = GT
+    | (calculatePriority d a) < (calculatePriority d b)  = LT
+    | (calculatePriority d a) > (calculatePriority d b)  = GT
     | (calculatePriority d a) == (calculatePriority d b) = EQ 
 
 
